@@ -3,26 +3,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const amountInput = document.getElementById('amount');
     const fromCurrencySelect = document.getElementById('from-currency');
     const toCurrencySelect = document.getElementById('to-currency');
-    const fromCurrencyName = document.getElementById('from-currency-name'); // Diubah
-    const toCurrencyName = document.getElementById('to-currency-name');   // Diubah
+    const fromCurrencyName = document.getElementById('from-currency-name');
+    const toCurrencyName = document.getElementById('to-currency-name');
     const resultDiv = document.getElementById('result');
     const swapButton = document.getElementById('swap-button');
     const rateInfo = document.getElementById('rate-info');
     const lastUpdatedSpan = document.getElementById('last-updated');
     const popularChips = document.querySelectorAll('.chip');
 
+    // Daftar ini hanya untuk menampilkan nama lengkap jika tersedia
     const currencyNames = {
         USD: "Dolar AS", EUR: "Euro", JPY: "Yen Jepang", IDR: "Rupiah",
         GBP: "Pound Sterling", AUD: "Dolar Australia", CAD: "Dolar Kanada",
         CHF: "Franc Swiss", CNY: "Yuan Tiongkok", SGD: "Dolar Singapura",
+        MYR: "Ringgit Malaysia", THB: "Baht Thailand", PHP: "Peso Filipina",
+        VND: "Dong Vietnam", KRW: "Won Korea Selatan", HKD: "Dolar Hong Kong",
+        INR: "Rupee India", SAR: "Riyal Arab Saudi", AED: "Dirham UEA",
     };
 
     let conversionRates = {};
 
+    // --- FUNGSI INI YANG DIUBAH ---
     async function fetchRates() {
+        // PENTING: GANTI DENGAN API KEY ANDA YANG ASLI
+        const apiKey = '8e8e02475155ac697cb41753'; 
+        const apiUrl = `https://v6.exchangerate-api.com/v6/${apiKey}/latest/USD`;
+
         try {
-            const response = await fetch('api/get_rates.php');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            // Memanggil API eksternal secara langsung
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             const data = await response.json();
             if (data.result === 'success') {
@@ -31,7 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 calculateConversion();
                 updateLastUpdated(data.time_last_update_unix);
             } else {
-                showError('Gagal memuat data kurs.');
+                // Menangani error dari API, seperti API key tidak valid
+                showError(data['error-type'] || 'Gagal memuat data kurs.');
             }
         } catch (error) {
             console.error("Fetch error:", error);
@@ -40,6 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function populateCurrencies(rates) {
+        // Mengambil SEMUA mata uang dari API
         const currencies = Object.keys(rates);
         fromCurrencySelect.innerHTML = '';
         toCurrencySelect.innerHTML = '';
